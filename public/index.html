@@ -1,11 +1,1304 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EvangelAI</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Daniel Analytics™ - UV CIPP Lining Project Management Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+        
+        .metric-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color, #3b82f6);
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .metric-card.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            --accent-color: #fbbf24;
+        }
+        
+        .metric-card.primary::before {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .metric-card.success {
+            --accent-color: #10b981;
+        }
+        
+        .metric-card.warning {
+            --accent-color: #f59e0b;
+        }
+        
+        .metric-card.info {
+            --accent-color: #3b82f6;
+        }
+        
+        .metric-card.purple {
+            --accent-color: #8b5cf6;
+        }
+
+        .metric-card.danger {
+            --accent-color: #ef4444;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .chart-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .table-row {
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .table-row:hover {
+            background: linear-gradient(90deg, #f8fafc 0%, #f0f9ff 100%);
+            transform: scale(1.01);
+        }
+        
+        .status-select {
+            border-radius: 12px;
+            border: 2px solid;
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 6px 12px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .status-completed {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #166534;
+            border-color: #10b981;
+        }
+        
+        .status-progress {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border-color: #f59e0b;
+        }
+        
+        .status-not-started {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #374151;
+            border-color: #9ca3af;
+        }
+        
+        .input-field {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 8px 12px;
+            width: 100px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-field-small {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 4px 8px;
+            width: 80px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .input-field:focus, .input-field-small:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .nav-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            color: white;
+        }
+        
+        .icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px 16px 0 0;
+            border-bottom: 3px solid #e2e8f0;
+        }
+        
+        .brand-logo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+        
+        .footer-brand {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .number-display {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.025em;
+        }
+
+        .performance-table {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .performance-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 14px 14px 0 0;
+        }
+
+        .trend-positive { color: #16a34a; }
+        .trend-negative { color: #dc2626; }
+        .trend-neutral { color: #64748b; }
+
+        .variance-good { background: rgba(16, 185, 129, 0.1); color: #166534; }
+        .variance-poor { background: rgba(239, 68, 68, 0.1); color: #991b1b; }
+        .variance-neutral { background: rgba(100, 116, 139, 0.1); color: #475569; }
+    </style>
 </head>
-<body>
-    <h1>Welcome to EvangelAI</h1>
+<body class="min-h-screen">
+    <div class="p-8">
+        <div class="max-w-8xl mx-auto">
+            <!-- Header Section -->
+            <div class="dashboard-container p-8 mb-8 animate-fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-4">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-chart-line text-2xl text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-4xl font-bold brand-logo mb-2">
+                                Daniel Analytics™
+                            </h1>
+                            <p class="text-lg text-gray-600 font-medium">UV CIPP Lining Project Management Dashboard</p>
+                        </div>
+                    </div>
+                    <div class="nav-card p-4">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-user-circle text-2xl"></i>
+                            <div class="text-right">
+                                <p class="font-semibold">Daniel</p>
+                                <p class="text-sm opacity-80">Project Manager</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Key Performance Indicators -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <!-- Task Completion Progress -->
+                    <div class="metric-card primary p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-tasks text-xl"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm opacity-80 font-medium">Task Progress</p>
+                                <p class="text-3xl font-bold number-display" id="taskProgressPercent">0%</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="trend-indicator">
+                                <i class="fas fa-arrow-right text-green-300"></i>
+                                <span class="text-sm" id="taskProgressText">0 / 36 tasks</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Time Performance -->
+                    <div class="metric-card success p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="icon-wrapper" style="background: rgba(16, 185, 129, 0.1);">
+                                <i class="fas fa-clock text-xl text-green-600"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-600 font-medium">Time Efficiency</p>
+                                <p class="text-3xl font-bold number-display text-gray-800" id="timeEfficiencyPercent">0%</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="trend-indicator">
+                                <i class="fas fa-tachometer-alt text-green-500"></i>
+                                <span class="text-sm text-gray-600" id="timeVarianceText">On schedule</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Installation Rate -->
+                    <div class="metric-card warning p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="icon-wrapper" style="background: rgba(245, 158, 11, 0.1);">
+                                <i class="fas fa-gauge-high text-xl text-amber-600"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-600 font-medium">Install Rate</p>
+                                <p class="text-2xl font-bold number-display text-gray-800" id="installationRate">0 m/hr</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="trend-indicator">
+                                <i class="fas fa-chart-line text-amber-500"></i>
+                                <span class="text-sm text-gray-600" id="rateVsPlanned">vs planned</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quality Score -->
+                    <div class="metric-card info p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="icon-wrapper" style="background: rgba(59, 130, 246, 0.1);">
+                                <i class="fas fa-medal text-xl text-blue-600"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-600 font-medium">Quality Score</p>
+                                <p class="text-3xl font-bold number-display text-gray-800" id="qualityScore">100%</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="trend-indicator">
+                                <i class="fas fa-check-circle text-blue-500"></i>
+                                <span class="text-sm text-gray-600" id="successRateText">First-time success</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resource Utilization -->
+                    <div class="metric-card purple p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="icon-wrapper" style="background: rgba(139, 92, 246, 0.1);">
+                                <i class="fas fa-users-gear text-xl text-purple-600"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-600 font-medium">Resource Efficiency</p>
+                                <p class="text-2xl font-bold number-display text-gray-800" id="resourceUtilization">95%</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="trend-indicator">
+                                <i class="fas fa-arrow-up text-purple-500"></i>
+                                <span class="text-sm text-gray-600" id="utilizationText">Crew efficiency</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time Summary Bar -->
+                <div class="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-100">
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center gap-6">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-circle text-green-500 text-xs"></i>
+                                <span class="font-medium">Project Health: <span id="projectHealthStatus" class="font-bold text-green-600">Excellent</span></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-trending-up text-blue-500 text-xs"></i>
+                                <span class="font-medium">Performance: <span id="performanceStatus" class="font-bold text-blue-600">On Track</span></span>
+                            </div>
+                        </div>
+                        <div class="text-gray-600">
+                            Last updated: <span id="lastUpdated" class="font-medium">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 animate-fade-in">
+                <div class="chart-card p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i class="fas fa-chart-line text-blue-500 text-xl"></i>
+                        <h2 class="text-2xl font-bold gradient-text">Progress Tracking</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i class="fas fa-chart-bar text-purple-500 text-xl"></i>
+                        <h2 class="text-2xl font-bold gradient-text">Performance Metrics</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i class="fas fa-chart-area text-green-500 text-xl"></i>
+                        <h2 class="text-2xl font-bold gradient-text">Daily Productivity</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="productivityChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i class="fas fa-chart-pie text-amber-500 text-xl"></i>
+                        <h2 class="text-2xl font-bold gradient-text">Resource Analysis</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="resourceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Programme Table -->
+            <div class="table-container animate-fade-in mb-8">
+                <div class="section-header p-6">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-table text-gray-700 text-xl"></i>
+                        <h2 class="text-2xl font-bold text-gray-800">Project Tasks Overview</h2>
+                    </div>
+                    <p class="text-gray-600 mt-2">Portsmouth UV CIPP Lining Installation Programme</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="table-header">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fas fa-calendar mr-2"></i>Scheduled Date
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fas fa-tag mr-2"></i>GY ID
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fas fa-map-marker mr-2"></i>Location
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fas fa-ruler mr-2"></i>Length (m)
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fas fa-clock mr-2"></i>Planned Time (hrs)
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fas fa-stopwatch mr-2"></i>Actual Time (hrs)
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fas fa-hard-hat mr-2"></i>Crew Size
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fas fa-flag mr-2"></i>Status
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100" id="tasksTableBody">
+                            <!-- Tasks will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Performance Tracking Table -->
+            <div class="performance-table animate-fade-in mb-8">
+                <div class="performance-header p-6">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-chart-bar text-white text-xl"></i>
+                        <h2 class="text-2xl font-bold text-white">Performance Metrics Input</h2>
+                    </div>
+                    <p class="text-white/80 mt-2">Track actual performance against planned targets</p>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Left Column: Length & Time Metrics -->
+                        <div class="space-y-6">
+                            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fas fa-tools text-orange-500"></i>
+                                    Setup/Teardown Efficiency
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Setup Time (hrs)</label>
+                                        <input type="number" id="setupTimeInput" class="input-field-small" step="0.1" placeholder="0.0">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Teardown Time (hrs)</label>
+                                        <input type="number" id="teardownTimeInput" class="input-field-small" step="0.1" placeholder="0.0">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span class="font-medium">Non-Productive Time:</span>
+                                            <span id="nonProductiveTime" class="font-bold variance-neutral px-2 py-1 rounded">0 hrs</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fas fa-clock text-green-500"></i>
+                                    Time Performance
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Planned Time (hrs)</label>
+                                        <input type="number" id="plannedTimeInput" class="input-field-small" step="0.1" placeholder="0.0">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Actual Time (hrs)</label>
+                                        <input type="number" id="actualTimeInput" class="input-field-small" step="0.1" placeholder="0.0">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span class="font-medium">Time Variance:</span>
+                                            <span id="timeVariance" class="font-bold variance-neutral px-2 py-1 rounded">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Efficiency & Quality Metrics -->
+                        <div class="space-y-6">
+                            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fas fa-tachometer-alt text-purple-500"></i>
+                                    Efficiency Metrics
+                                </h3>
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <span class="font-medium">Installation Rate:</span>
+                                        <span id="currentInstallRate" class="font-bold text-gray-800">0 m/hr</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <span class="font-medium">Daily Productivity:</span>
+                                        <span id="dailyProductivity" class="font-bold text-gray-800">0 m/day</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <span class="font-medium">Efficiency Score:</span>
+                                        <span id="efficiencyScore" class="font-bold variance-neutral px-2 py-1 rounded">100%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fas fa-medal text-amber-500"></i>
+                                    Quality & Resource Metrics
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">First-time Success</label>
+                                        <input type="number" id="firstTimeSuccessInput" class="input-field-small" min="0" placeholder="0">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Rework Required</label>
+                                        <input type="number" id="reworkIncidentsInput" class="input-field-small" min="0" placeholder="0">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Permit Delays (days)</label>
+                                        <input type="number" id="permitDelaysInput" class="input-field-small" min="0" step="0.5" placeholder="0">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Weather Days Lost</label>
+                                        <input type="number" id="weatherDelaysInput" class="input-field-small" min="0" step="0.5" placeholder="0">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span class="font-medium">Success Rate:</span>
+                                            <span id="successRate" class="font-bold variance-good px-2 py-1 rounded">100%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Update Button -->
+                    <div class="mt-6 text-center">
+                        <button onclick="updatePerformanceMetrics()" 
+                                class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            Update Performance Metrics
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer-brand p-6 mt-12 text-center animate-fade-in">
+                <p class="text-white font-semibold">
+                    © 2025 Daniel™. All rights reserved.
+                </p>
+                <p class="text-white/70 text-sm mt-1">
+                    Powered by Daniel Analytics™ - Professional UV CIPP Lining Solutions
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Project data with CORRECT time calculations from your actual data:
+        // DIG-UP cases (5 only): (60% of length + 5 days) = (length * 0.6 + 120) hours
+        // SLEEVING cases: Use actual times from your data (last column)
+        let tasks = [
+            // Week 1: Aug 5-8
+            {
+                id: 1, scheduledDate: '2025-08-05', gynId: 'GY-989', location: 'Twyford Avenue', 
+                length: 6.53, plannedTime: 0.98, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 2, scheduledDate: '2025-08-05', gynId: 'GY-982', location: 'Twyford Avenue', 
+                length: 23.11, plannedTime: 3.47, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 3, scheduledDate: '2025-08-05', gynId: 'GY-863', location: 'Copnor Road', 
+                length: 4.38, plannedTime: (4.38 * 0.6 + 120), actualTime: 0, crewSize: 2, status: 'Not Started', isDig: true
+            },
+            {
+                id: 4, scheduledDate: '2025-08-05', gynId: 'GY-1605', location: 'Stubbington Road', 
+                length: 4.09, plannedTime: 0.61, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 5, scheduledDate: '2025-08-06', gynId: 'GY-12437', location: 'Glady\'s Avenue', 
+                length: 8.14, plannedTime: 1.22, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 6, scheduledDate: '2025-08-06', gynId: 'GY-773', location: 'Baffins Road', 
+                length: 12.04, plannedTime: 1.81, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 7, scheduledDate: '2025-08-06', gynId: 'GY-11670', location: 'Baffins Road', 
+                length: 4.85, plannedTime: 0.73, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 8, scheduledDate: '2025-08-06', gynId: 'GY-11664', location: 'Baffins Road', 
+                length: 4.85, plannedTime: 0.73, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 9, scheduledDate: '2025-08-07', gynId: 'GY-277', location: 'Goldsmith Avenue', 
+                length: 47.44, plannedTime: 7.12, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 10, scheduledDate: '2025-08-07', gynId: 'GY-11717', location: 'Kings Terrace', 
+                length: 8.0, plannedTime: 1.2, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 11, scheduledDate: '2025-08-08', gynId: 'GY-12048', location: 'Twyford Avenue', 
+                length: 8.96, plannedTime: (8.96 * 0.6 + 120), actualTime: 0, crewSize: 2, status: 'Not Started', isDig: true
+            },
+            {
+                id: 12, scheduledDate: '2025-08-08', gynId: 'GY-11393', location: 'London Road', 
+                length: 5.13, plannedTime: 0.77, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 13, scheduledDate: '2025-08-08', gynId: 'GY-1206', location: 'Stamshaw Road', 
+                length: 5.66, plannedTime: 0.85, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            // Week 2: Aug 11-15
+            {
+                id: 14, scheduledDate: '2025-08-11', gynId: 'GY-520', location: 'London Road', 
+                length: 9.4, plannedTime: 1.41, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 15, scheduledDate: '2025-08-11', gynId: 'GY-866', location: 'Copnor Road', 
+                length: 6.55, plannedTime: 0.98, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 16, scheduledDate: '2025-08-12', gynId: 'GY-2020', location: 'M275 Northbound', 
+                length: 15.0, plannedTime: (15.0 * 0.6 + 120), actualTime: 0, crewSize: 2, status: 'Not Started', isDig: true
+            },
+            {
+                id: 17, scheduledDate: '2025-08-12', gynId: 'GY-2113', location: 'M275', 
+                length: 12.5, plannedTime: 1.88, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 18, scheduledDate: '2025-08-13', gynId: 'GY-786', location: 'Baffins Road', 
+                length: 10.25, plannedTime: 1.54, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 19, scheduledDate: '2025-08-13', gynId: 'GY-787', location: 'Baffins Road', 
+                length: 9.26, plannedTime: 1.39, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 20, scheduledDate: '2025-08-13', gynId: 'GY-11686', location: 'Baffins Road', 
+                length: 7.9, plannedTime: 1.19, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 21, scheduledDate: '2025-08-14', gynId: 'GY-2076', location: 'M275 Southbound', 
+                length: 42.14, plannedTime: (42.14 * 0.6 + 120), actualTime: 0, crewSize: 2, status: 'Not Started', isDig: true
+            },
+            {
+                id: 22, scheduledDate: '2025-08-14', gynId: 'GY-12935', location: 'M275', 
+                length: 4.27, plannedTime: 0.64, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 23, scheduledDate: '2025-08-15', gynId: 'GY-11039', location: 'Eastern Road', 
+                length: 8.5, plannedTime: 1.28, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 24, scheduledDate: '2025-08-15', gynId: 'GY-11040', location: 'Eastern Road', 
+                length: 6.2, plannedTime: 0.93, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            // Week 3: Aug 18-21
+            {
+                id: 25, scheduledDate: '2025-08-18', gynId: 'GY-11209', location: 'Eastern Road', 
+                length: 11.3, plannedTime: 1.70, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 26, scheduledDate: '2025-08-19', gynId: 'GY-1876', location: 'Devonshire Avenue', 
+                length: 6.1, plannedTime: 0.91, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 27, scheduledDate: '2025-08-19', gynId: 'GY-1865', location: 'Devonshire Avenue', 
+                length: 3.51, plannedTime: 0.53, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 28, scheduledDate: '2025-08-19', gynId: 'GY-11256', location: 'Goldsmith Avenue', 
+                length: 9.0, plannedTime: 1.35, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 29, scheduledDate: '2025-08-20', gynId: 'GY-11912', location: 'High Street', 
+                length: 7.99, plannedTime: (7.99 * 0.6 + 120), actualTime: 0, crewSize: 2, status: 'Not Started', isDig: true
+            },
+            {
+                id: 30, scheduledDate: '2025-08-20', gynId: 'GY-573', location: 'Fratton Road', 
+                length: 14.2, plannedTime: 2.13, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 31, scheduledDate: '2025-08-20', gynId: 'GY-11455', location: 'Kingston Road', 
+                length: 5.9, plannedTime: 0.89, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 32, scheduledDate: '2025-08-21', gynId: 'GY-11851', location: 'Twyford Avenue', 
+                length: 6.59, plannedTime: 0.99, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 33, scheduledDate: '2025-08-21', gynId: 'GY-103899', location: 'Northern Road', 
+                length: 16.34, plannedTime: 2.45, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 34, scheduledDate: '2025-08-21', gynId: 'GY-1203', location: 'Stamshaw Road', 
+                length: 4.8, plannedTime: 0.72, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 35, scheduledDate: '2025-08-22', gynId: 'GY-11687', location: 'Goldsmith Avenue', 
+                length: 13.7, plannedTime: 2.06, actualTime: 0, crewSize: 2, status: 'Not Started'
+            },
+            {
+                id: 36, scheduledDate: '2025-08-22', gynId: 'GY-11218', location: 'Goldsmith Avenue', 
+                length: 10.1, plannedTime: 1.52, actualTime: 0, crewSize: 2, status: 'Not Started'
+            }
+        ];
+
+        // Performance tracking variables
+        let performanceMetrics = {
+            totalPlannedTime: 0,
+            totalActualTime: 0,
+            setupTime: 0,
+            teardownTime: 0,
+            firstTimeSuccess: 0,
+            reworkIncidents: 0,
+            permitDelays: 0,
+            weatherDelays: 0,
+            dailyProductivity: []
+        };
+
+        // Global chart instances
+        let chartInstances = {};
+
+        // Utility functions
+        function formatNumber(value, decimals = 2) {
+            return value.toLocaleString('en-GB', { 
+                minimumFractionDigits: decimals, 
+                maximumFractionDigits: decimals 
+            });
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'Completed': return 'status-completed';
+                case 'In Progress': return 'status-progress';
+                default: return 'status-not-started';
+            }
+        }
+
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            document.getElementById('lastUpdated').textContent = timeString;
+        }
+
+        // Calculate comprehensive metrics
+        function calculateMetrics() {
+            const completedTasks = tasks.filter(task => task.status === 'Completed');
+            const inProgressTasks = tasks.filter(task => task.status === 'In Progress');
+            const totalTasks = tasks.length;
+            
+            // Length calculations
+            const totalPlannedLength = tasks.reduce((sum, task) => sum + task.length, 0);
+            const actualLengthCompleted = completedTasks.reduce((sum, task) => sum + task.length, 0);
+            
+            // Time calculations
+            const totalPlannedTime = tasks.reduce((sum, task) => sum + task.plannedTime, 0);
+            const actualTimeSpent = tasks.reduce((sum, task) => sum + (task.actualTime || 0), 0);
+            const plannedTimeForCompleted = completedTasks.reduce((sum, task) => sum + task.plannedTime, 0);
+            const actualTimeForCompleted = completedTasks.reduce((sum, task) => sum + (task.actualTime || 0), 0);
+            
+            // Performance calculations
+            const lengthProgress = totalPlannedLength > 0 ? (actualLengthCompleted / totalPlannedLength * 100) : 0;
+            const timeEfficiency = actualTimeForCompleted > 0 ? (plannedTimeForCompleted / actualTimeForCompleted * 100) : 100;
+            const installationRate = actualTimeForCompleted > 0 ? (actualLengthCompleted / actualTimeForCompleted) : 0;
+            
+            // Quality calculations
+            const totalAttempts = performanceMetrics.firstTimeSuccess + performanceMetrics.reworkIncidents;
+            const successRate = totalAttempts > 0 ? (performanceMetrics.firstTimeSuccess / totalAttempts * 100) : 100;
+            
+            // Resource utilization (simplified calculation based on crew efficiency)
+            const totalCrewHours = completedTasks.reduce((sum, task) => sum + (task.crewSize * (task.actualTime || 0)), 0);
+            const plannedCrewHours = completedTasks.reduce((sum, task) => sum + (task.crewSize * task.plannedTime), 0);
+            const resourceUtilization = plannedCrewHours > 0 ? (plannedCrewHours / totalCrewHours * 100) : 95;
+            
+            return {
+                totalTasks,
+                completedTasks: completedTasks.length,
+                inProgressTasks: inProgressTasks.length,
+                totalPlannedLength,
+                actualLengthCompleted,
+                lengthProgress,
+                totalPlannedTime,
+                actualTimeSpent,
+                timeEfficiency,
+                installationRate,
+                successRate,
+                resourceUtilization: Math.min(resourceUtilization, 100),
+                plannedTimeForCompleted,
+                actualTimeForCompleted
+            };
+        }
+
+        // Update main KPI cards
+        function updateMainMetrics() {
+            const metrics = calculateMetrics();
+            
+            try {
+                // Task Progress
+                const taskProgress = totalTasks > 0 ? (metrics.completedTasks / totalTasks * 100) : 0;
+                document.getElementById('taskProgressPercent').textContent = `${formatNumber(taskProgress)}%`;
+                document.getElementById('taskProgressText').textContent = `${metrics.completedTasks} / ${totalTasks} tasks`;
+                
+                // Time Efficiency
+                document.getElementById('timeEfficiencyPercent').textContent = `${formatNumber(metrics.timeEfficiency)}%`;
+                const timeVarianceText = metrics.timeEfficiency >= 100 ? 'Ahead of schedule' : 'Behind schedule';
+                document.getElementById('timeVarianceText').textContent = timeVarianceText;
+                
+                // Installation Rate
+                document.getElementById('installationRate').textContent = `${formatNumber(metrics.installationRate, 1)} m/hr`;
+                document.getElementById('rateVsPlanned').textContent = 'Current rate';
+                
+                // Quality Score
+                document.getElementById('qualityScore').textContent = `${formatNumber(metrics.successRate)}%`;
+                document.getElementById('successRateText').textContent = 'Success rate';
+                
+                // Resource Utilization
+                document.getElementById('resourceUtilization').textContent = `${formatNumber(metrics.resourceUtilization)}%`;
+                document.getElementById('utilizationText').textContent = 'Crew efficiency';
+                
+                // Project health
+                updateProjectHealth(metrics);
+                
+            } catch (error) {
+                console.error('Error updating main metrics:', error);
+            }
+        }
+
+        // Update project health indicators
+        function updateProjectHealth(metrics) {
+            const healthElement = document.getElementById('projectHealthStatus');
+            const performanceElement = document.getElementById('performanceStatus');
+            
+            const taskProgress = metrics.totalTasks > 0 ? (metrics.completedTasks / metrics.totalTasks * 100) : 0;
+            
+            // Health assessment
+            if (taskProgress >= 75 && metrics.timeEfficiency >= 90) {
+                healthElement.textContent = 'Excellent';
+                healthElement.className = 'font-bold text-green-600';
+            } else if (taskProgress >= 50 && metrics.timeEfficiency >= 75) {
+                healthElement.textContent = 'Good';
+                healthElement.className = 'font-bold text-blue-600';
+            } else if (taskProgress >= 25) {
+                healthElement.textContent = 'Fair';
+                healthElement.className = 'font-bold text-yellow-600';
+            } else {
+                healthElement.textContent = 'Needs Attention';
+                healthElement.className = 'font-bold text-red-600';
+            }
+            
+            // Performance assessment
+            if (metrics.timeEfficiency >= 110) {
+                performanceElement.textContent = 'Ahead of Schedule';
+                performanceElement.className = 'font-bold text-green-600';
+            } else if (metrics.timeEfficiency >= 90) {
+                performanceElement.textContent = 'On Track';
+                performanceElement.className = 'font-bold text-blue-600';
+            } else if (metrics.timeEfficiency >= 75) {
+                performanceElement.textContent = 'Slight Delay';
+                performanceElement.className = 'font-bold text-yellow-600';
+            } else {
+                performanceElement.textContent = 'Behind Schedule';
+                performanceElement.className = 'font-bold text-red-600';
+            }
+        }
+
+        // Update performance metrics when inputs change
+        function updatePerformanceMetrics() {
+            const setupTime = parseFloat(document.getElementById('setupTimeInput').value) || 0;
+            const teardownTime = parseFloat(document.getElementById('teardownTimeInput').value) || 0;
+            const plannedTime = parseFloat(document.getElementById('plannedTimeInput').value) || 0;
+            const actualTime = parseFloat(document.getElementById('actualTimeInput').value) || 0;
+            const firstTimeSuccess = parseInt(document.getElementById('firstTimeSuccessInput').value) || 0;
+            const reworkIncidents = parseInt(document.getElementById('reworkIncidentsInput').value) || 0;
+            const permitDelays = parseFloat(document.getElementById('permitDelaysInput').value) || 0;
+            const weatherDelays = parseFloat(document.getElementById('weatherDelaysInput').value) || 0;
+            
+            // Update performance metrics object
+            performanceMetrics.setupTime = setupTime;
+            performanceMetrics.teardownTime = teardownTime;
+            performanceMetrics.totalPlannedTime = plannedTime;
+            performanceMetrics.totalActualTime = actualTime;
+            performanceMetrics.firstTimeSuccess = firstTimeSuccess;
+            performanceMetrics.reworkIncidents = reworkIncidents;
+            performanceMetrics.permitDelays = permitDelays;
+            performanceMetrics.weatherDelays = weatherDelays;
+            
+            // Calculate metrics
+            const completedTasks = tasks.filter(task => task.status === 'Completed');
+            const actualLengthCompleted = completedTasks.reduce((sum, task) => sum + task.length, 0);
+            const nonProductiveTime = setupTime + teardownTime;
+            const timeVariance = plannedTime > 0 ? ((actualTime - plannedTime) / plannedTime * 100) : 0;
+            const productiveTime = Math.max(0, actualTime - nonProductiveTime);
+            const installRate = productiveTime > 0 ? (actualLengthCompleted / productiveTime) : 0;
+            const dailyProd = installRate * 8; // 8 hour day
+            const efficiency = actualTime > 0 ? (plannedTime / actualTime * 100) : 100;
+            const totalAttempts = firstTimeSuccess + reworkIncidents;
+            const successRate = totalAttempts > 0 ? (firstTimeSuccess / totalAttempts * 100) : 100;
+            
+            // Update display elements
+            document.getElementById('nonProductiveTime').textContent = `${formatNumber(nonProductiveTime, 1)} hrs`;
+            updateVarianceDisplay('timeVariance', timeVariance);
+            
+            document.getElementById('currentInstallRate').textContent = `${formatNumber(installRate, 1)} m/hr`;
+            document.getElementById('dailyProductivity').textContent = `${formatNumber(dailyProd, 1)} m/day`;
+            updateVarianceDisplay('efficiencyScore', efficiency);
+            updateVarianceDisplay('successRate', successRate);
+            
+            // Update main metrics and charts
+            updateMainMetrics();
+            createCharts();
+            updateTimestamp();
+        }
+
+        // Update variance display with color coding
+        function updateVarianceDisplay(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            let className = 'font-bold px-2 py-1 rounded ';
+            let displayValue = '';
+            
+            if (elementId.includes('Variance')) {
+                displayValue = `${value >= 0 ? '+' : ''}${formatNumber(value, 1)}%`;
+                className += Math.abs(value) <= 5 ? 'variance-good' : 
+                           Math.abs(value) <= 15 ? 'variance-neutral' : 'variance-poor';
+            } else if (elementId === 'efficiencyScore') {
+                displayValue = `${formatNumber(value)}%`;
+                className += value >= 95 ? 'variance-good' : 
+                           value >= 80 ? 'variance-neutral' : 'variance-poor';
+            } else if (elementId === 'successRate') {
+                displayValue = `${formatNumber(value)}%`;
+                className += value >= 95 ? 'variance-good' : 
+                           value >= 85 ? 'variance-neutral' : 'variance-poor';
+            }
+            
+            element.textContent = displayValue;
+            element.className = className;
+        }
+
+        // Handle task updates
+        function handleStatusChange(taskId, newStatus) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = newStatus;
+                renderTasks();
+                updateMainMetrics();
+                createCharts();
+                updateTimestamp();
+            }
+        }
+
+        function handleActualTimeChange(taskId, value) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.actualTime = parseFloat(value) || 0;
+                updateMainMetrics();
+                createCharts();
+                updateTimestamp();
+            }
+        }
+
+        // Render tasks table
+        function renderTasks() {
+            const tbody = document.getElementById('tasksTableBody');
+            tbody.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const row = document.createElement('tr');
+                row.className = 'table-row';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${task.scheduledDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">${task.gynId}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${task.location}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 number-display">${formatNumber(task.length)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 number-display">
+                        ${formatNumber(task.plannedTime, 1)}
+                        ${task.isDig ? '<span class="ml-1 text-xs bg-red-100 text-red-800 px-1 rounded">DIG</span>' : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <input type="number" 
+                               class="input-field-small" 
+                               value="${task.actualTime || 0}" 
+                               onchange="handleActualTimeChange(${task.id}, this.value)"
+                               placeholder="0.0"
+                               step="0.1"
+                               min="0">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 number-display">2</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <select onchange="handleStatusChange(${task.id}, this.value)" 
+                                class="status-select ${getStatusClass(task.status)}">
+                            <option value="Not Started" ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                            <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Create enhanced charts
+        function createCharts() {
+            // Clean up existing charts
+            Object.values(chartInstances).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            chartInstances = {};
+
+            Chart.defaults.font.family = 'Inter';
+            Chart.defaults.font.size = 12;
+            Chart.defaults.color = '#64748b';
+
+            const metrics = calculateMetrics();
+
+            try {
+                // 1. Progress Tracking Chart
+                const progressCtx = document.getElementById('progressChart').getContext('2d');
+                chartInstances.progressChart = new Chart(progressCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Current'],
+                        datasets: [{
+                            label: 'Planned Progress',
+                            data: [25, 50, 75, 100],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        }, {
+                            label: 'Actual Progress',
+                            data: [0, 0, 0, (metrics.completedTasks / metrics.totalTasks * 100)],
+                            borderColor: '#16a34a',
+                            backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Project Progress Over Time' }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: { callback: function(value) { return value + '%'; } }
+                            }
+                        }
+                    }
+                });
+
+                // 2. Performance Metrics Chart
+                const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+                chartInstances.performanceChart = new Chart(performanceCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Task Progress', 'Time Efficiency', 'Quality Score', 'Resource Utilization', 'Schedule Adherence'],
+                        datasets: [{
+                            label: 'Current Performance',
+                            data: [
+                                (metrics.completedTasks / metrics.totalTasks * 100),
+                                metrics.timeEfficiency,
+                                metrics.successRate,
+                                metrics.resourceUtilization,
+                                metrics.timeEfficiency
+                            ],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Performance Radar' }
+                        },
+                        scales: {
+                            r: { 
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: { callback: function(value) { return value + '%'; } }
+                            }
+                        }
+                    }
+                });
+
+                // 3. Daily Productivity Chart
+                const productivityCtx = document.getElementById('productivityChart').getContext('2d');
+                const dates = ['Aug 5', 'Aug 6', 'Aug 7', 'Aug 8', 'Aug 11', 'Aug 12', 'Aug 13', 'Aug 14', 'Aug 15', 'Aug 18', 'Aug 19', 'Aug 20', 'Aug 21', 'Aug 22'];
+                
+                // Calculate planned metres per day based on scheduled tasks
+                const plannedData = [
+                    38.11, // Aug 5: GY-989(6.53) + GY-982(23.11) + GY-863(4.38) + GY-1605(4.09)
+                    29.84, // Aug 6: GY-12437(8.14) + GY-773(12.04) + GY-11670(4.85) + GY-11664(4.85)
+                    55.44, // Aug 7: GY-277(47.44) + GY-11717(8.0)
+                    19.75, // Aug 8: GY-12048(8.96) + GY-11393(5.13) + GY-1206(5.66)
+                    15.95, // Aug 11: GY-520(9.4) + GY-866(6.55)
+                    27.5,  // Aug 12: GY-2020(15.0) + GY-2113(12.5)
+                    27.41, // Aug 13: GY-786(10.25) + GY-787(9.26) + GY-11686(7.9)
+                    46.41, // Aug 14: GY-2076(42.14) + GY-12935(4.27)
+                    14.7,  // Aug 15: GY-11039(8.5) + GY-11040(6.2)
+                    11.3,  // Aug 18: GY-11209(11.3)
+                    18.61, // Aug 19: GY-1876(6.1) + GY-1865(3.51) + GY-11256(9.0)
+                    28.09, // Aug 20: GY-11912(7.99) + GY-573(14.2) + GY-11455(5.9)
+                    27.73, // Aug 21: GY-11851(6.59) + GY-103899(16.34) + GY-1203(4.8)
+                    23.8   // Aug 22: GY-11687(13.7) + GY-11218(10.1)
+                ];
+                
+                chartInstances.productivityChart = new Chart(productivityCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: 'Planned (m)',
+                            data: plannedData,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 6
+                        }, {
+                            label: 'Actual (m)',
+                            data: new Array(dates.length).fill(0), // Will be updated based on completed tasks
+                            backgroundColor: '#16a34a',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Daily Productivity (metres)' }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                max: 60 // Adjust max to accommodate highest day (Aug 7: 55.44m)
+                            }
+                        }
+                    }
+                });
+
+                // 4. Resource Analysis Chart
+                const resourceCtx = document.getElementById('resourceChart').getContext('2d');
+                chartInstances.resourceChart = new Chart(resourceCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Productive Time', 'Permit Delays', 'Weather Delays', 'Other'],
+                        datasets: [{
+                            data: [
+                                85 - (performanceMetrics.permitDelays * 2) - (performanceMetrics.weatherDelays * 3),
+                                performanceMetrics.permitDelays * 2,
+                                performanceMetrics.weatherDelays * 3,
+                                Math.max(0, 15 - performanceMetrics.permitDelays - performanceMetrics.weatherDelays)
+                            ],
+                            backgroundColor: ['#16a34a', '#f59e0b', '#ef4444', '#9ca3af'],
+                            borderWidth: 3,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Time Utilization Analysis' },
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error creating charts:', error);
+            }
+        }
+
+        // Initialize the dashboard
+        function init() {
+            try {
+                renderTasks();
+                updateMainMetrics();
+                updateTimestamp();
+                
+                if (typeof Chart !== 'undefined') {
+                    createCharts();
+                } else {
+                    setTimeout(init, 200);
+                    return;
+                }
+                
+                console.log('Enhanced dashboard initialized successfully');
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                setTimeout(init, 500);
+            }
+        }
+
+        // Start the application
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Add window resize handler for charts
+        window.addEventListener('resize', function() {
+            setTimeout(createCharts, 100);
+        });
+    </script>
 </body>
 </html>
